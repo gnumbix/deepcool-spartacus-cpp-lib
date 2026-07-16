@@ -1,0 +1,60 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  # Primary build: the Makefile, on Linux (gcc + clang) and macOS.
+  make:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cxx: g++
+          - os: ubuntu-latest
+            cxx: clang++
+          - os: macos-latest
+            cxx: c++
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install libusb + pkg-config
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev pkg-config
+          else
+            brew install libusb pkg-config
+          fi
+      - name: Golden-vector tests
+        run: make test CXX=${{ matrix.cxx }}
+      - name: Build library + examples
+        run: make CXX=${{ matrix.cxx }}
+      - name: Core-only build (WITH_IMAGE=0)
+        run: make clean && make WITH_IMAGE=0 CXX=${{ matrix.cxx }}
+
+  # Alternative build: CMake configure/build/ctest + staged install.
+  cmake:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install libusb + pkg-config
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            sudo apt-get update && sudo apt-get install -y libusb-1.0-0-dev pkg-config
+          else
+            brew install libusb pkg-config
+          fi
+      - name: Configure
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build -j
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+      - name: Staged install
+        run: DESTDIR=$PWD/stage cmake --install build --prefix /usr/local

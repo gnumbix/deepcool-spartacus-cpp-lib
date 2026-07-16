@@ -1,0 +1,12 @@
+# pkg-config metadata for libspartacus. @TOKENS@ are filled in by the build system
+# (both the Makefile and CMake consume this same template).
+prefix=@PREFIX@
+libdir=@LIBDIR@
+includedir=@INCLUDEDIR@
+
+Name: spartacus
+Description: C++17 client library for the DeepCool SPARTACUS 360 / 420 AIO cooler (LCD display + fan/ARGB Linker)
+Version: @VERSION@
+Requires.private: libusb-1.0
+Cflags: -I${includedir}
+Libs: -L${libdir} -lspartacus

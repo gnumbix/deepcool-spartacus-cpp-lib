@@ -1,0 +1,11 @@
+# DeepCool SPARTACUS 360 / 420 — grant locally logged-in users access to both USB devices so
+# libspartacus programs can open them without root (TAG+="uaccess" is honoured by systemd-udevd).
+#
+# Install: copy to /etc/udev/rules.d/ (or /usr/lib/udev/rules.d/), then:
+#   sudo udevadm control --reload-rules && sudo udevadm trigger
+# Re-plug the cooler afterwards.
+
+# Display Controller (0x3633:0x0027)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="3633", ATTRS{idProduct}=="0027", MODE="0660", TAG+="uaccess"
+# Fan & Lighting "Linker" (0x3633:0x002d)
+SUBSYSTEM=="usb", ATTRS{idVendor}=="3633", ATTRS{idProduct}=="002d", MODE="0660", TAG+="uaccess"
